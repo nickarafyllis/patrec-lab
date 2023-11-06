@@ -2,6 +2,7 @@
 import librosa 
 import os 
 import re 
+import matplotlib.pyplot as plt
 
 #step 2
 dir = "../patrec-files/pr_lab1/pr_lab1_2020-21_data/digits"
@@ -16,12 +17,16 @@ def file_split(filename):
 
 #get wav, speaker number and digit of every wav file in directory
 def data_parser(dir):
+    
     wav = []
     speaker = []
     digit = []
     wav = []
-    for filename in (os.listdir(dir)):
+    
+    for filename in os.listdir(dir):
         path = os.path.join(dir, filename)
+        #audio_data, _ = librosa.load(path, sr=16000)
+        #wav.append(audio_data)
         wav.append(librosa.load(path, sr=16000))
         number, text = file_split(filename)
         digit.append(text)
@@ -33,10 +38,45 @@ def data_parser(dir):
     
     return wav, speaker, digit
 
-wav, speaker, digit = data_parser(dir)
+#step 3
+def extract_features(wavs):
+    
+    mfccs = []
+    deltas = []
+    delta_deltas = []
+    
+    for wav in wavs:
+        y, sr = wav 
+        # Extract MFCC features
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13, hop_length=160, n_fft=400)
+        # Calculate deltas and delta-deltas
+        delta = librosa.feature.delta(mfcc)
+        delta2 = librosa.feature.delta(mfcc, order=2)
+        
+        mfccs.append(mfcc)
+        deltas.append(delta)
+        delta_deltas.append(delta2)
+    
+    return mfccs, deltas, delta_deltas
 
-#test 
-# Print all elements in the first 5 positions of each list
-# print("First a wav:", wav[:1])
-# print("First 5 speakers:", speaker[:5])
-# print("First 5 digits:", digit[:5])
+wav, speaker, digit = data_parser(dir)
+mfccs, deltas, delta_deltas = extract_features(wav)
+
+#step 4
+# Filter and separate the MFCCs for digits 3 and 4
+mfccs_3 = [mfcc for mfcc, d in zip(mfccs, digit) if d == 'three']
+mfccs_4 = [mfcc for mfcc, d in zip(mfccs, digit) if d == 'four']
+
+# Function to create and display a histogram for a specific MFCC and digit
+def plot_mfcc_histogram(mfcc_data, mfcc_number, digit):
+    plt.hist(mfcc_data,  bins='auto')
+    plt.title(f'Histogram of {mfcc_number} MFCC for Digit {digit}')
+    plt.show()
+
+# Plot histograms for 1st and 2nd MFCCs of digit 3
+plot_mfcc_histogram([mfcc[0] for mfcc in mfccs_3], '1st', 'three')
+plot_mfcc_histogram([mfcc[1] for mfcc in mfccs_3], '2nd', 'three')
+
+# Plot histograms for 1st and 2nd MFCCs of digit 4
+plot_mfcc_histogram([mfcc[0] for mfcc in mfccs_4], '1st', 'four')
+plot_mfcc_histogram([mfcc[1] for mfcc in mfccs_4], '2nd', 'four')
