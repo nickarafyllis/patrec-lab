@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #seed for reproducibility
-seed = 17
+seed = 42
 torch.manual_seed(seed)
 np.random.seed(seed)
 
@@ -95,3 +95,17 @@ with torch.no_grad():
 #     plt.scatter(range(len(predicted_sequences[i - num_train])), predicted_sequences[i - num_train], label='Predicted cosine points', marker='x', s=20)
 # plt.legend()
 # plt.show()
+
+# Evaluate on  test set
+# model.eval()  # Set model to evaluation mode
+# test_loss = 0
+
+# with torch.no_grad():
+#     for i, (inputs, targets) in enumerate(test_loader):
+#         outputs = model(inputs)
+#         loss = criterion(outputs, targets)
+#         test_loss += loss.item()
+
+# # Calculate average test loss
+# average_test_loss = test_loss / len(test_loader.dataset)
+# print(f'Average Test Loss: {average_test_loss:.4f}')

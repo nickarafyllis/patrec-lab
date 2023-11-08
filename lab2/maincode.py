@@ -4,10 +4,11 @@ import os
 import re 
 import matplotlib.pyplot as plt
 
-#step 2
+
 dir = "../patrec-files/pr_lab1/pr_lab1_2020-21_data/digits"
 dir = "../pr_lab1_2020-21_data/digits"
 
+#step 2
 #get  speaker number and digit of a file by splitting its name
 def file_split(filename):
     match = re.match(r'([A-Za-z]+)(\d+)', filename)
@@ -21,12 +22,9 @@ def data_parser(dir):
     wav = []
     speaker = []
     digit = []
-    wav = []
     
     for filename in os.listdir(dir):
         path = os.path.join(dir, filename)
-        #audio_data, _ = librosa.load(path, sr=16000)
-        #wav.append(audio_data)
         wav.append(librosa.load(path, sr=16000))
         number, text = file_split(filename)
         digit.append(text)
@@ -45,10 +43,17 @@ def extract_features(wavs):
     deltas = []
     delta_deltas = []
     
+    window_length_ms = 25
+    hop_step_ms = 10
+    sr=16000
+    
+    hop_length=int(hop_step_ms * sr / 1000)
+    n_fft=int(window_length_ms*sr/1000)
+    
     for wav in wavs:
         y, sr = wav 
         # Extract MFCC features
-        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13, hop_length=160, n_fft=400)
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13, hop_length=hop_length, n_fft=n_fft)
         # Calculate deltas and delta-deltas
         delta = librosa.feature.delta(mfcc)
         delta2 = librosa.feature.delta(mfcc, order=2)

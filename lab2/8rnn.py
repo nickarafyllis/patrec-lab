@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #seed for reproducibility
-seed = 17
+seed = 42
 torch.manual_seed(seed)
 np.random.seed(seed)
 
