@@ -159,6 +159,4 @@ def scatter_plot(X_data, Y_data):
     ax.set_title('First two dimensions illustrated')
     plt.show()
 
-scatter_plot(vector_data, digit)
-
-
+scatter_plot(vector_data,digit)
