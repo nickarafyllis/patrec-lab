@@ -25,12 +25,8 @@ def data_parser(dir):
     
     speaker = []
     digit = []
-<<<<<<< HEAD
-    
-=======
     wav = []
    
->>>>>>> 27213a109aaed64015e013387432a36d85495c70
     for filename in os.listdir(dir):
         path = os.path.join(dir, filename)
         wav.append(librosa.load(path, sr=16000))
@@ -61,7 +57,6 @@ def extract_features(wavs):
     mfccs = []
     deltas = []
     delta_deltas = []
-<<<<<<< HEAD
     
     window_length_ms = 25
     hop_step_ms = 10
@@ -69,21 +64,13 @@ def extract_features(wavs):
     
     hop_length=int(hop_step_ms * sr / 1000)
     n_fft=int(window_length_ms*sr/1000)
-    
-    for wav in wavs:
-        y, sr = wav 
-        # Extract MFCC features
-        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13, hop_length=hop_length, n_fft=n_fft)
-=======
-    mfscs = []
 
     for wav in wavs:
         y, sr = wav 
         # Extract MFCC & MFSC features
-        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13, hop_length=160, n_fft=400)  
-        mfsc = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=13, hop_length=160, n_fft=400)  
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13, hop_length=hop_length, n_fft=n_fft)  
+        mfsc = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=13, hop_length=hop_length, n_fft=n_fft)  
 
->>>>>>> 27213a109aaed64015e013387432a36d85495c70
         # Calculate deltas and delta-deltas
         delta = librosa.feature.delta(mfcc)
         delta2 = librosa.feature.delta(mfcc, order=2)
