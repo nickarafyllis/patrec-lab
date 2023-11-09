@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np 
 import pandas as pd 
 import seaborn as sns
+from sklearn.decomposition import PCA
 
 
 dir = "../patrec-files/pr_lab1/pr_lab1_2020-21_data/digits"
@@ -43,13 +44,13 @@ def data_parser(dir):
 
 #check results
 wav, speaker, digit = data_parser(dir)
-wavs = [element[0].tolist() for element in wav] 
+num_samples = len(wav)
 
 for i in range(5):
-    print("Waveform: " + str(wavs[i][:3]))
+    wavs, sr = wav[i] 
+    print("Waveform: " + str(wavs[:3])) #plotting only the first 3 values for each waveform
     print("Speaker: " + str(speaker[i]))
     print("Digit: " + str(digit[i]))
-
 
 #step 3
 def extract_features(wavs):
@@ -57,13 +58,14 @@ def extract_features(wavs):
     mfccs = []
     deltas = []
     delta_deltas = []
-    
+    mfscs = []
+
     window_length_ms = 25
     hop_step_ms = 10
-    sr=16000
+    sr = 16000
     
-    hop_length=int(hop_step_ms * sr / 1000)
-    n_fft=int(window_length_ms*sr/1000)
+    hop_length = int(hop_step_ms * sr / 1000)
+    n_fft = int(window_length_ms*sr/1000)
 
     for wav in wavs:
         y, sr = wav 
@@ -133,35 +135,64 @@ plot_correlation(mfccs_4[:2][1], '2', 'four', MFSCs = False)
 
 #Step 5
 
-vector_data = np.zeros((133, 6*13))
+mfccs = [mfccs[i].T for i in range(num_samples)] #resize to 133xNx13 where N = number_of_samples of each wav
+deltas = [deltas[i].T for i in range(num_samples)]
+delta_deltas = [delta_deltas[i].T for i in range(num_samples)]
+con_vector = [np.concatenate((mfccs[i], deltas[i], delta_deltas[i]), axis=1) for i in range(num_samples)] #size = 133xNx(13x3)
 
-for i in range(133):
-    vector_data[i, :13] = np.mean(mfccs[i], axis=1)
-    vector_data[i, 13:26] = np.mean(deltas[i], axis=1)
-    vector_data[i, 26:39] = np.mean(delta_deltas[i], axis=1)
-    vector_data[i, 39:52] = np.std(mfccs[i], axis=1)
-    vector_data[i, 52:65] = np.std(deltas[i], axis=1)
-    vector_data[i, 65:] = np.std(delta_deltas[i], axis=1)
+mean = [np.mean(con_vector[j], axis=0) for j in range(num_samples)] #size = 133x39 
+std = [np.std(con_vector[j], axis=0) for j in range(num_samples)] 
 
+vector_data = np.concatenate((mean,std), axis=1) #size = 133x78
 
 def scatter_plot(X_data, Y_data):
     Y_data = np.array(Y_data)
-    X0, X1 = X_data[:,0], X_data[:,1]
-    colors = ['pink', 'brown', 'red', 'blue', 'green', 'yellow', 'purple', 'gray', 'black', 'orange']
+    X0, X1 = X_data[:,0], X_data[:,1] #take the first 2 dimensions 
+    colors = ['pink', 'brown', 'red', 'blue', 'green', 'yellow', 'purple', 'gray', 'black']
     fig, ax = plt.subplots()
     string_label = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
-    i = 0
-    for label in string_label:
-            ax.scatter(
+    i = 1
+    for i, label in enumerate(string_label):
+        ax.scatter(
             X0[Y_data == label], X1[Y_data == label],
-            c=(colors[i]), label=i,
+            c=colors[i], label=label, 
             s=50, alpha=0.9, edgecolors='k'
         )
-            i = i+1 
-
-    ax.set_xlabel('X1')
-    ax.set_ylabel('X2')
-    ax.set_title('First two dimensions illustrated')
+    ax.set_xlabel('X0')
+    ax.set_ylabel('X1')
+    ax.set_title('Two dimensions illustrated')
+    ax.legend()
     plt.show()
 
-scatter_plot(vector_data,digit)
+scatter_plot(vector_data, digit)
+
+#Step 6
+
+pca_2d = PCA(n_components=2)
+vector_data_2d = pca_2d.fit_transform(vector_data)
+scatter_plot(vector_data_2d, digit)
+
+def scatter_plot_3d(X_data, Y_data):
+    Y_data = np.array(Y_data)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    X0, X1, X2 = X_data[:, 0], X_data[:, 1], X_data[:, 2]
+    colors = ['pink', 'brown', 'red', 'blue', 'green', 'yellow', 'purple', 'gray', 'black']
+    string_label = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+    for i, label in enumerate(string_label):
+        Z0 = X0[Y_data == label]
+        ax.scatter(
+            X0[Y_data == label], X1[Y_data == label], X2[Y_data == label],
+            c=colors[i], label=label,  
+            s=30, alpha=0.9, edgecolors='k'
+        )
+    ax.set_xlabel('X0')
+    ax.set_ylabel('X1')
+    ax.set_zlabel("X2")
+    ax.set_title('Three dimensions illustrated')
+    ax.legend()
+    plt.show()
+
+pca_3d = PCA(n_components=3)
+vector_data_3d = pca_3d.fit_transform(vector_data)
+scatter_plot_3d(vector_data_3d, digit)
