@@ -1,9 +1,10 @@
-from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-from sklearn.model_selection import train_test_split
-import pandas as pd 
 import matplotlib.pyplot as plt
+import numpy as np 
+import pandas as pd 
 import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.neighbors import KNeighborsClassifier
 
 # Load the CSV file into a Pandas DataFrame
 df = pd.read_csv("data.csv")
@@ -15,14 +16,14 @@ X = df.iloc[:, :-1]
 X_train, X_test, y_train, y_test = train_test_split(
      X, y, test_size=0.3, random_state=42, shuffle=True)
 
-# Instantiate the Gaussian Naive Bayes classifier
-nb_model = GaussianNB()
+# Instantiate the K-Nearest Neighbors classifier
+knn_model = KNeighborsClassifier(n_neighbors=5)
 
 # Train the model on the training data
-nb_model.fit(X_train, y_train)
+knn_model.fit(X_train, y_train)
 
 # Get predictions on the test set
-y_pred = nb_model.predict(X_test)
+y_pred = knn_model.predict(X_test)
 
 # Evaluate the performance of the model
 # Accuracy
