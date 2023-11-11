@@ -8,6 +8,8 @@ import pandas as pd
 import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.manifold import TSNE
 
 
 dir = "../patrec-files/pr_lab1/pr_lab1_2020-21_data/digits"
@@ -87,7 +89,7 @@ def extract_features(wavs):
 mfccs, mfscs, deltas, delta_deltas = extract_features(wav)
 
 #step 4
-# Filter and separate the MFCCs for digits 3 and 4 #GIATI 3 KAI 4?
+# Filter and separate the MFCCs for digits 3 and 4 #GIATI 3 KAI 4? epeidi se 4 teleionei o am sou, emena se 0 opote eprepe na valo ena diplano
 mfccs_3 = [mfcc for mfcc, d in zip(mfccs, digit) if d == 'three']
 mfccs_4 = [mfcc for mfcc, d in zip(mfccs, digit) if d == 'four']
 mfscs_3 = [mfsc for mfsc, d in zip(mfscs, digit) if d == 'three'][:2] #keeping only the first 2 
@@ -169,6 +171,10 @@ scatter_plot(vector_data, digit)
 
 #Step 6
 
+# scaling added to avoid variance calculations of PCA being dominated by features with higher scales
+scaler = StandardScaler()
+vector_data = scaler.fit_transform(vector_data)
+
 pca_2d = PCA(n_components=2)
 vector_data_2d = pca_2d.fit_transform(vector_data)
 scatter_plot(vector_data_2d, digit)
@@ -200,9 +206,13 @@ pca_3d = PCA(n_components=3)
 vector_data_3d = pca_3d.fit_transform(vector_data)
 scatter_plot_3d(vector_data_3d, digit)
 
-#step 7 start
 
-#split
-# X_train, X_test, y_train, y_test = train_test_split(
-#      X_scaled, Y_data, test_size=0.3, random_state=42, shuffle=True)
-#then save data
+# Save data to be used in scripts for step 7
+
+digit = np.array(digit) #tuple to NumPy array
+digit = digit.reshape(-1, 1) #reshape digits to 2D array
+# concat into dataframe 
+concatenated_data = np.concatenate((vector_data, digit), axis=1)
+df = pd.DataFrame(concatenated_data)
+# save data into csv
+df.to_csv("data.csv", index=False)
