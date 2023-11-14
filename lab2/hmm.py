@@ -69,28 +69,28 @@ def initialize_and_fit_normal_distributions(X, n_states):
     return dists
 
 
-def initialize_transition_matrix():
+def initialize_transition_matrix(n_states):
     # TODO: YOUR CODE HERE
     # Make sure the dtype is np.float32
     return ...
 
 
-def initialize_starting_probabilities():
+def initialize_starting_probabilities(n_states):
     # TODO: YOUR CODE HERE
     # Make sure the dtype is np.float32
     return ...
 
 
-def initialize_end_probabilities():
+def initialize_end_probabilities(n_states):
     # TODO: YOUR CODE HERE
     # Make sure the dtype is np.float32
     return ...
 
 
-def train_single_hmm(X, emission_model, digit):
-    A = initialize_transition_matrix()
-    start_probs = initialize_starting_probabilities()
-    end_probs = initialize_end_probabilities()
+def train_single_hmm(X, emission_model, digit, n_states):
+    A = initialize_transition_matrix(n_states)
+    start_probs = initialize_starting_probabilities(n_states)
+    end_probs = initialize_end_probabilities(n_states)
     data = [x.astype(np.float32) for x in X]
 
     model = DenseHMM(
@@ -119,12 +119,12 @@ def evaluate(hmms, dic, labels):
     for dig in labels:
         X, _, _, _ = dic[dig]
         for sample in X:
-            ev = []
-            for _ in labels:
-                sample = np.expand_dims(sample, 0)
+            ev = [0] * len(labels)
+            sample = np.expand_dims(sample, 0)
+            for digit, hmm in hmms.items():
                 # TODO: YOUR CODE HERE
                 logp = ...  # use the hmm.log_probability function
-                ev.append(logp)
+                ev[digit] = logp
 
             # TODO: YOUR CODE HERE
             predicted_digit = ...  # Calculate the most probable digit
