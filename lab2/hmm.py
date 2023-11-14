@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import numpy as np
 from pomegranate.distributions import Normal
 from pomegranate.gmm import GeneralMixtureModel
@@ -31,7 +32,6 @@ def gather_in_dic(X, labels, spk):
 
 def create_data():
     X, X_test, y, y_test, spk, spk_test = parser("recordings", n_mfcc=13)
-
     # TODO: YOUR CODE HERE
     (
         X_train,
@@ -40,12 +40,11 @@ def create_data():
         y_val,
         spk_train,
         spk_val,
-    ) = ...  # split X into a 80/20 train validation split
+    ) = train_test_split(X, y, spk, stratify=y, test_size=0.2)  # split X into a 80/20 train validation split
     train_dic = gather_in_dic(X_train, y_train, spk_train)
     val_dic = gather_in_dic(X_val, y_val, spk_val)
     test_dic = gather_in_dic(X_test, y_test, spk_test)
     labels = list(set(y_train))
-
     return train_dic, y_train, val_dic, y_val, test_dic, y_test, labels
 
 
@@ -135,13 +134,14 @@ def evaluate(hmms, dic, labels):
 
 
 train_dic, y_train, val_dic, y_val, test_dic, y_test, labels = create_data()
-hmms = train_hmms(train_dic, labels)
+
+#hmms = train_hmms(train_dic, labels)
 
 
-labels = list(set(y_train))
-pred_val, true_val = evaluate(hmms, val_dic, labels)
+#labels = list(set(y_train))
+#pred_val, true_val = evaluate(hmms, val_dic, labels)
 
-pred_test, true_test = evaluate(hmms, test_dic, labels)
+#pred_test, true_test = evaluate(hmms, test_dic, labels)
 
 
 # TODO: YOUR CODE HERE
