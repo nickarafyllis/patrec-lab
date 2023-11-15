@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 import numpy as np
 from pomegranate.distributions import Normal
-from pomegranate.gmm import GeneralMixtureModel
+from pomegranate.gmm import GeneralMixtureModel, NormalDistribution
 from pomegranate.hmm import DenseHMM
 from parser import parser
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, confusion_matrix
 from plot_confusion_matrix import plot_confusion_matrix
+from scipy.stats import norm
 
 
 # TODO: YOUR CODE HERE
@@ -52,11 +53,10 @@ def initialize_and_fit_gmm_distributions(X, n_states, n_mixtures):
     # TODO: YOUR CODE HERE
     dists = []
     for _ in range(n_states):
-        distributions = ...  # n_mixtures gaussian distributions
-        a = GeneralMixtureModel(distributions, verbose=True).fit(
-            np.concatenate(X)
-        )  # Concatenate all frames from all samples into a large matrix
-        dists.append(a)
+        distributions = [NormalDistribution(mu, sigma) for mu, sigma in zip(np.mean(X, axis=0), np.std(X, axis=0))]
+        gmm = GeneralMixtureModel(distributions, n_components=n_mixtures, verbose=True)
+        gmm.fit(X)
+        dists.append(gmm)
     return dists
 
 
@@ -64,27 +64,49 @@ def initialize_and_fit_normal_distributions(X, n_states):
     dists = []
     for _ in range(n_states):
         # TODO: YOUR CODE HERE
-        d = ...  # Fit a normal distribution on X
-        dists.append(d)
+        mean = np.mean(X, axis=0)
+        std = np.std(X, axis=0)
+        dist = NormalDistribution(mean, std)
+        dists.append(dist)
     return dists
 
 
 def initialize_transition_matrix(n_states):
     # TODO: YOUR CODE HERE
     # Make sure the dtype is np.float32
-    return ...
+    # Initialize transition matrix with zeros
+    transition_matrix = np.zeros((n_states, n_states), dtype=np.float32)
+
+    # Set transition probabilities
+    for i in range(n_states):
+        for j in range(n_states):
+            if j == i or j == i + 1:  # Transition to self or to next state
+                transition_matrix[i, j] = 0.5  # Adjust as needed based on your specific scenario
+            else:
+                transition_matrix[i, j] = 0.0  # No other transitions allowed in left-right HMM
+
+    # Normalize rows to ensure probabilities sum up to 1
+    transition_matrix = transition_matrix / transition_matrix.sum(axis=1, keepdims=True)
+
+    return transition_matrix
 
 
 def initialize_starting_probabilities(n_states):
     # TODO: YOUR CODE HERE
     # Make sure the dtype is np.float32
-    return ...
+    starting_probabilities = np.zeros(n_states, dtype=np.float32)
+    starting_probabilities[0] = 1.0  # Η αρχική κατάσταση έχει πιθανότητα 1.0
+    return starting_probabilities
 
 
 def initialize_end_probabilities(n_states):
     # TODO: YOUR CODE HERE
     # Make sure the dtype is np.float32
-    return ...
+    end_probabilities = np.zeros(n_states, dtype=np.float32)
+    end_probabilities[n_states - 1] = 1.0  # Η τελευταία κατάσταση έχει πιθανότητα 1.0
+    
+    # or end_probabilities = np.ones(n_states, dtype=np.float32) / n_states
+    return end_probabilities
 
 
 def train_single_hmm(X, emission_model, digit, n_states):
