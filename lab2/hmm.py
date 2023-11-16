@@ -11,6 +11,7 @@ from plot_confusion_matrix import plot_confusion_matrix
 from scipy.stats import norm
 import torch
 import itertools
+from plot_confusion_matrix import plot_confusion_matrix
 
 # TODO: YOUR CODE HERE
 # Play with diffrent variations of parameters in your experiments
@@ -184,27 +185,6 @@ acc_test = calculate_acc(pred_test, true_test)
 print("states:%d, Gaussians:%d, has %f accuracy for Test Set" %(best_n_states, best_n_mixtures, acc_test))
 
 #confusion matrix
-def plot_confusion_matrix(cm, classes,
-                          title='Confusion matrix',
-                          cmap=plt.cm.Blues):
-    cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.title(title)
-    plt.colorbar()
-    tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks, classes, rotation=45)
-    plt.yticks(tick_marks, classes)
-    fmt = '.2f' 
-    thresh = cm.max() / 2.
-    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        plt.text(j, i, format(cm[i, j], fmt),
-            horizontalalignment="center",
-            color="white" if cm[i, j] > thresh else "black")
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-    plt.tight_layout()
-    plt.show()
-
 def calculate_cm(pred, true):
     cm = np.zeros((10, 10)) #initialize confusion matrix
     for i in range(len(true)):
@@ -213,10 +193,10 @@ def calculate_cm(pred, true):
 
 cm_test = calculate_cm(pred_test, true_test)
 plt.rcParams['figure.figsize'] = [25, 20]
-plot_confusion_matrix(cm_test, [i for i in range(10)])
+plot_confusion_matrix(cm_test, [i for i in range(10)], normalize=True)
 cm_val = calculate_cm(pred_val, true_val)
 plt.rcParams['figure.figsize'] = [25, 20]
-plot_confusion_matrix(cm_val, [i for i in range(10)])
+plot_confusion_matrix(cm_val, [i for i in range(10)], normalize=True)
 
 acc_total = calculate_acc(pred_test+pred_val+pred_train, true_test+true_val+true_train)
 print("states:%d, Gaussians:%d, has %f accuracy for Total Set" %(best_n_states, best_n_mixtures, acc_total))
