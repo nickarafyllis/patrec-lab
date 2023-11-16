@@ -10,12 +10,13 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 from plot_confusion_matrix import plot_confusion_matrix
 from scipy.stats import norm
 import torch
+import itertools
 
 # TODO: YOUR CODE HERE
 # Play with diffrent variations of parameters in your experiments
-n_states = 2  # the number of HMM states
-n_mixtures = 2  # the number of Gaussians
-gmm = True  # whether to use GMM or plain Gaussian
+n_states = 4  # the number of HMM states
+n_mixtures = 3  # the number of Gaussians
+gmm = True # whether to use GMM or plain Gaussian
 covariance_type = "diag"  # Use diagonal covariange
 
 
@@ -64,7 +65,7 @@ def initialize_and_fit_normal_distributions(X, n_states):
     dists = []
     for _ in range(n_states):
         # TODO: YOUR CODE HERE
-        dist = Normal(covariance_type)
+        dist = Normal(covariance_type).fit(np.concatenate(X))
         dists.append(dist)
     return dists
 
@@ -93,7 +94,7 @@ def initialize_starting_probabilities(n_states):
     # TODO: YOUR CODE HERE
     # Make sure the dtype is np.float32
     starting_probabilities = np.zeros(n_states, dtype=np.float32)
-    starting_probabilities[0] = 1.0  # Η αρχική κατάσταση έχει πιθανότητα 1.0
+    starting_probabilities[0] = 1.0  #First state has probability = 1.0
     return starting_probabilities
 
 
@@ -101,7 +102,7 @@ def initialize_end_probabilities(n_states):
     # TODO: YOUR CODE HERE
     # Make sure the dtype is np.float32
     end_probabilities = np.zeros(n_states, dtype=np.float32)
-    end_probabilities[n_states - 1] = 1.0  # Η τελευταία κατάσταση έχει πιθανότητα 1.0 
+    end_probabilities[n_states - 1] = 1.0  #Last state has probability = 1.0 
     return end_probabilities
 
 
@@ -132,7 +133,6 @@ def train_hmms(train_dic, labels, gmm, n_mixtures, n_states):
             emission_model = initialize_and_fit_gmm_distributions(X, n_states, n_mixtures)
         else:
             emission_model = initialize_and_fit_normal_distributions(X, n_states)
-
         hmms[dig] =  train_single_hmm(X, emission_model, dig, n_states)
 
     return hmms
@@ -158,10 +158,7 @@ def evaluate(hmms, dic, labels):
 
 
 train_dic, y_train, val_dic, y_val, test_dic, y_test, labels = create_data()
-#hmms = train_hmms(train_dic, labels, gmm, n_mixtures)
 labels = list(set(y_train))
-#pred_val, true_val = evaluate(hmms, val_dic, labels)
-#pred_test, true_test = evaluate(hmms, test_dic, labels)
 
 # TODO: YOUR CODE HERE
 # Calculate and print the accuracy score on the validation and the test sets
@@ -169,20 +166,57 @@ labels = list(set(y_train))
 
 def calculate_acc(pred, true):
     correct_predictions = sum(p == t for p, t in zip(pred, true))
-    total_predictions = len(pred)
-    return correct_predictions / total_predictions
+    return correct_predictions / len(pred)
 
-hmms = train_hmms(train_dic, labels, gmm, 3, 3) #paizoume me timoules edw (oxi for loop!! (giati den ta katafernei))
-pred_val, true_val = evaluate(hmms, val_dic, labels)
-acc_val = (calculate_acc(pred_val, true_val))
-print("states:%d, Gaussians:%d, has %f accuracy for Validation Set" %(n_states, n_mixtures, acc_val))
+#hmms = train_hmms(train_dic, labels, gmm, n_mixtures, n_states)
 
-best_n_states =   # afou ta treksw
-best_n_mixtures =  
+#acc_val = (calculate_acc(pred_val, true_val))
+#print("states:%d, Gaussians:%d, has %f accuracy for Validation Set" %(n_states, n_mixtures, acc_val))
 
-best_hmms = train_hmms(train_dic, labels, gmm, best_n_states, best_n_mixtures) 
-pred_test, true_test = evaluate(hmms, test_dic, labels)
+best_n_states = 4 
+best_n_mixtures = 3  
+
+best_hmms = train_hmms(train_dic, labels, gmm, best_n_mixtures, best_n_states,) 
+pred_train, true_train = evaluate(best_hmms, train_dic, labels)
+pred_val, true_val = evaluate(best_hmms, val_dic, labels)
+pred_test, true_test = evaluate(best_hmms, test_dic, labels)
 acc_test = calculate_acc(pred_test, true_test)
-print("states:%d, Gaussians:%d, has %f accuracy for Test Set" %(n_states, n_mixtures, acc_test))
+print("states:%d, Gaussians:%d, has %f accuracy for Test Set" %(best_n_states, best_n_mixtures, acc_test))
 
 #confusion matrix
+def plot_confusion_matrix(cm, classes,
+                          title='Confusion matrix',
+                          cmap=plt.cm.Blues):
+    cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+    fmt = '.2f' 
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt),
+            horizontalalignment="center",
+            color="white" if cm[i, j] > thresh else "black")
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.tight_layout()
+    plt.show()
+
+def calculate_cm(pred, true):
+    cm = np.zeros((10, 10)) #initialize confusion matrix
+    for i in range(len(true)):
+        cm[true[i], pred[i]] += 1
+    return cm
+
+cm_test = calculate_cm(pred_test, true_test)
+plt.rcParams['figure.figsize'] = [25, 20]
+plot_confusion_matrix(cm_test, [i for i in range(10)])
+cm_val = calculate_cm(pred_val, true_val)
+plt.rcParams['figure.figsize'] = [25, 20]
+plot_confusion_matrix(cm_val, [i for i in range(10)])
+
+acc_total = calculate_acc(pred_test+pred_val+pred_train, true_test+true_val+true_train)
+print("states:%d, Gaussians:%d, has %f accuracy for Total Set" %(best_n_states, best_n_mixtures, acc_total))

@@ -14,5 +14,8 @@ dir = 'recordings/'
 #step 9
 X_train, X_test, y_train, y_test, spk_train, spk_test = parser.parser(dir)
 X_train, X_dev, y_train, y_dev = train_test_split(X_train, y_train, stratify=y_train, test_size=0.2)
-print(y_train)
-#step10
+
+
+
+
+
